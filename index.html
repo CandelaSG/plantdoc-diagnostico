@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Diagnóstico foliar de campo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
+<style>
+  :root {
+    --parchment: #F0EBDA;
+    --card: #FBF8EF;
+    --ink: #20281E;
+    --forest: #223821;
+    --forest-2: #2E4A2C;
+    --sage: #798870;
+    --sage-line: #D8D2BC;
+    --gold: #B8862E;
+    --gold-soft: #EFE0BE;
+    --rust: #A8452B;
+    --rust-soft: #F1DED6;
+    --green-ok: #3B6B3E;
+    --green-ok-soft: #DDE7D3;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--parchment);
+    color: var(--ink);
+    margin: 0;
+  }
+  .hero {
+    background: var(--forest);
+    background-image: radial-gradient(circle at 85% -10%, var(--forest-2) 0%, var(--forest) 60%);
+    color: #EFE9D6;
+    padding: 2.75rem 1.5rem 3.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #B9CBAE;
+    margin: 0 0 14px;
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: clamp(28px, 7vw, 38px);
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+  .hero p {
+    font-size: 14px;
+    color: #C9D4BE;
+    max-width: 340px;
+    margin: 0 auto;
+    line-height: 1.55;
+  }
+  .leaf-mark { position: absolute; opacity: 0.5; }
+  .main {
+    max-width: 480px;
+    margin: -1.75rem auto 0;
+    padding: 0 1.25rem 3rem;
+    position: relative;
+  }
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--sage-line);
+    border-radius: 4px;
+    box-shadow: 0 18px 40px -22px rgba(34,56,33,0.35);
+  }
+  .status-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--sage-line); }
+  .status-label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sage); }
+  .status-pill { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 4px 10px; border-radius: 20px; background: var(--gold-soft); color: var(--gold); letter-spacing: 0.02em; }
+  .status-pill.ok { background: var(--green-ok-soft); color: var(--green-ok); }
+  .status-pill.error { background: var(--rust-soft); color: var(--rust); }
+  .body-pad { padding: 22px; }
+  .error-box { background: var(--rust-soft); border-left: 3px solid var(--rust); border-radius: 0; padding: 14px 16px; margin-bottom: 18px; }
+  .error-box p:first-child { font-weight: 600; font-size: 13px; color: var(--rust); margin: 0 0 6px; }
+  .error-box p:last-child { font-size: 12px; color: var(--rust); margin: 0 0 12px; font-family: 'IBM Plex Mono', monospace; }
+  .upload-zone {
+    border: 1.5px dashed var(--sage);
+    border-radius: 4px;
+    padding: 3rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .upload-zone:hover { border-color: var(--forest); background: rgba(34,56,33,0.03); }
+  .upload-zone i { font-size: 30px; color: var(--sage); }
+  .upload-zone p.main-txt { font-family: 'Fraunces', serif; font-size: 17px; margin: 14px 0 4px; color: var(--ink); }
+  .upload-zone p.sub-txt { font-size: 12px; color: var(--sage); margin: 0; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.02em; }
+  button {
+    height: 40px;
+    border-radius: 2px;
+    border: 1px solid var(--forest);
+    background: transparent;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--forest);
+    letter-spacing: 0.01em;
+    transition: transform 0.1s ease, background 0.15s ease;
+  }
+  button:hover:not(:disabled) { background: rgba(34,56,33,0.06); }
+  button:active:not(:disabled) { transform: scale(0.98); }
+  button:disabled { opacity: 0.45; cursor: default; }
+  .btn-primary { background: var(--forest); color: #F0EBDA; }
+  .btn-primary:hover:not(:disabled) { background: var(--forest-2); }
+  img { max-width: 100%; }
+  .preview-frame { border-radius: 4px; overflow: hidden; border: 1px solid var(--sage-line); }
+  .preview-frame img { width: 100%; display: block; max-height: 280px; object-fit: cover; }
+  .btn-row { display: flex; gap: 8px; margin-top: 14px; }
+  .loading-state { text-align: center; padding: 3rem 0; }
+  .loading-state p { font-family: 'Fraunces', serif; font-style: italic; font-size: 15px; color: var(--sage); }
+  .spec-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--sage-line); margin-bottom: 18px; }
+  .spec-name-row { display: flex; align-items: center; gap: 10px; }
+  .spec-name { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; font-size: 19px; margin: 0; }
+  .gauge-outer { width: 76px; height: 76px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .gauge-inner { width: 58px; height: 58px; border-radius: 50%; background: var(--card); display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .gauge-value { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 16px; line-height: 1; }
+  .gauge-label { font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sage); margin-top: 3px; }
+  .field-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sage); margin: 0 0 5px; }
+  .field-text { font-size: 14px; line-height: 1.6; margin: 0 0 16px; }
+  .plates { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .plate-caption { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--sage); margin: 0 0 5px; letter-spacing: 0.02em; }
+  .plate-img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 3px; border: 1px solid var(--sage-line); display: block; }
+  .disclaimer { font-size: 11px; color: var(--sage); text-align: center; margin: 16px 0 0; font-family: 'IBM Plex Mono', monospace; line-height: 1.6; }
+  .divider { border: none; border-top: 1px solid var(--sage-line); margin: 18px 0; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <svg class="leaf-mark" style="top:-10px; right:8%; width:120px;" viewBox="0 0 100 100" fill="none"><path d="M50 10C30 20 15 45 20 75C50 75 80 60 80 30C80 20 65 12 50 10Z" stroke="#4C6B48" stroke-width="1.2"/><path d="M50 12L50 74" stroke="#4C6B48" stroke-width="1"/></svg>
+  <p class="eyebrow">Trabajo final · Data Science</p>
+  <h1>Diagnóstico foliar de campo</h1>
+  <p>Sacá una foto de una hoja de tomate o vid y obtené una lectura orientativa, entrenada con imágenes de laboratorio y de campo.</p>
+</div>
+
+<div class="main">
+  <div class="panel">
+    <div class="status-row">
+      <span class="status-label">Modelo</span>
+      <span id="status-pill" class="status-pill">conectando</span>
+    </div>
+    <div class="body-pad">
+
+      <div id="stage-error" style="display: none;">
+        <div class="error-box">
+          <p>No se pudo cargar el modelo</p>
+          <p id="error-detalle"></p>
+          <button id="retry-btn">Reintentar</button>
+        </div>
+      </div>
+
+      <div id="stage-upload">
+        <div id="upload-zone" class="upload-zone">
+          <i class="ti ti-camera-plus" aria-hidden="true"></i>
+          <p class="main-txt">Subí una hoja para analizar</p>
+          <p class="sub-txt">JPG · PNG · arrastrar y soltar</p>
+          <input type="file" id="file-input" accept="image/*" style="display: none;" />
+        </div>
+      </div>
+
+      <div id="stage-preview" style="display: none;">
+        <div class="preview-frame"><img id="preview-img" /></div>
+        <div class="btn-row">
+          <button id="cambiar-btn" style="flex: 0 0 auto;"><i class="ti ti-refresh" style="font-size: 15px; vertical-align: -2px; margin-right: 5px;" aria-hidden="true"></i>Cambiar</button>
+          <button id="diagnosticar-btn" class="btn-primary" style="flex: 1;" disabled>Cargando modelo…</button>
+        </div>
+      </div>
+
+      <div id="stage-loading" class="loading-state" style="display: none;">
+        <p>Leyendo la hoja…</p>
+      </div>
+
+      <div id="stage-result" style="display: none;"></div>
+
+    </div>
+  </div>
+  <p class="disclaimer">Prototipo de investigación · precisión medida en campo: 67% · no reemplaza el diagnóstico de un agrónomo</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<script>
+const MODEL_URL = "https://raw.githubusercontent.com/CandelaSG/plantdoc-diagnostico/main/model.json";
+const IMG_SIZE = 128;
+
+const CLASES = [
+  "Grape___Black_rot","Grape___Esca_(Black_Measles)","Grape___Leaf_blight_(Isariopsis_Leaf_Spot)","Grape___healthy",
+  "Tomato___Bacterial_spot","Tomato___Early_blight","Tomato___Late_blight","Tomato___Leaf_Mold",
+  "Tomato___Septoria_leaf_spot","Tomato___Spider_mites Two-spotted_spider_mite","Tomato___Target_Spot",
+  "Tomato___Tomato_Yellow_Leaf_Curl_Virus","Tomato___Tomato_mosaic_virus","Tomato___healthy"
+];
+
+const FICHAS = {
+  "Grape___Black_rot": { nombre: "Vitis vinifera — podredumbre negra", icono: "ti-alert-triangle", tono: "alerta", sintomas: "Manchas circulares marrones con puntos negros en el centro. En frutos, momificación negra.", manejo: "Retirar y destruir hojas y frutos afectados. Mejorar circulación de aire podando follaje denso.", derivar: "Si se extiende a más del 20% de la planta o aparece en frutos." },
+  "Grape___Esca_(Black_Measles)": { nombre: "Vitis vinifera — Esca", icono: "ti-alert-triangle", tono: "alerta", sintomas: "Rayas amarillas o rojizas entre nervaduras, avanzan a necrosis. Enfermedad de madera.", manejo: "No hay tratamiento curativo. Podar en seco y desinfectar herramientas entre plantas.", derivar: "Siempre. Manejo especializado." },
+  "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)": { nombre: "Vitis vinifera — tizón foliar", icono: "ti-alert-triangle", tono: "alerta", sintomas: "Manchas angulares marrón oscuro delimitadas por nervaduras.", manejo: "Eliminar hojas afectadas. Mejorar ventilación del canopeo.", derivar: "Si hay defoliación significativa antes de cosecha." },
+  "Grape___healthy": { nombre: "Vitis vinifera — sana", icono: "ti-circle-check", tono: "ok", sintomas: "Sin síntomas visibles de enfermedad.", manejo: "Continuar con el monitoreo habitual.", derivar: "No aplica." },
+  "Tomato___Bacterial_spot": { nombre: "Solanum lycopersicum — mancha bacteriana", icono: "ti-alert-triangle", tono: "alerta", sintomas: "Manchas pequeñas y oscuras de bordes irregulares, a veces con halo amarillo.", manejo: "Evitar riego por aspersión. Rotar cultivos.", derivar: "Si avanza rápido con clima cálido y húmedo." },
+  "Tomato___Early_blight": { nombre: "Solanum lycopersicum — tizón temprano", icono: "ti-alert-triangle", tono: "alerta", sintomas: "Manchas marrones con anillos concéntricos, empiezan en hojas bajas.", manejo: "Eliminar hojas inferiores afectadas. Evitar mojar el follaje.", derivar: "Si compromete más de un tercio del follaje." },
+  "Tomato___Late_blight": { nombre: "Solanum lycopersicum — tizón tardío", icono: "ti-alert-triangle", tono: "alerta", sintomas: "Manchas verde oscuro que se expanden rápido, aspecto aceitoso.", manejo: "Actuar rápido: retirar y destruir tejido afectado.", derivar: "Sí, cuanto antes. Mayor riesgo económico del cultivo." },
+  "Tomato___Leaf_Mold": { nombre: "Solanum lycopersicum — moho de la hoja", icono: "ti-alert-triangle", tono: "alerta", sintomas: "Manchas amarillas en el haz, moho oliva en el envés.", manejo: "Reducir humedad ambiente, mejorar ventilación.", derivar: "Si persiste pese a mejorar la ventilación." },
+  "Tomato___Septoria_leaf_spot": { nombre: "Solanum lycopersicum — mancha de Septoria", icono: "ti-alert-triangle", tono: "alerta", sintomas: "Manchas circulares con centro grisáceo, muy numerosas.", manejo: "Retirar hojas afectadas apenas aparecen.", derivar: "Si progresa hacia el tercio superior de la planta." },
+  "Tomato___Spider_mites Two-spotted_spider_mite": { nombre: "Solanum lycopersicum — ácaros", icono: "ti-alert-triangle", tono: "alerta", sintomas: "Punteado amarillento, telarañas finas en casos avanzados.", manejo: "Aumentar humedad ambiente. Lavado con agua a presión.", derivar: "Si hay telarañas visibles." },
+  "Tomato___Target_Spot": { nombre: "Solanum lycopersicum — mancha de diana", icono: "ti-alert-triangle", tono: "alerta", sintomas: "Manchas marrones con anillos concéntricos, borde definido.", manejo: "Mejorar circulación de aire. Retirar hojas afectadas.", derivar: "Si no mejora con manejo cultural." },
+  "Tomato___Tomato_Yellow_Leaf_Curl_Virus": { nombre: "Solanum lycopersicum — enrollamiento amarillo", icono: "ti-virus", tono: "virus", sintomas: "Hojas pequeñas enrolladas hacia arriba, amarilleo marcado.", manejo: "No tiene cura. Controlar mosca blanca, su vector.", derivar: "Sí, para confirmar y evaluar manejo del vector." },
+  "Tomato___Tomato_mosaic_virus": { nombre: "Solanum lycopersicum — virus del mosaico", icono: "ti-virus", tono: "virus", sintomas: "Moteado verde claro y oscuro, hojas deformadas.", manejo: "No tiene cura. Desinfectar herramientas entre plantas.", derivar: "Sí, para confirmar y evitar contagio." },
+  "Tomato___healthy": { nombre: "Solanum lycopersicum — sana", icono: "ti-circle-check", tono: "ok", sintomas: "Sin síntomas visibles de enfermedad.", manejo: "Continuar con el monitoreo habitual.", derivar: "No aplica." }
+};
+
+const TONOS = {
+  alerta: { color: "#A8452B" },
+  virus: { color: "#8B4A9C" },
+  ok: { color: "#3B6B3E" }
+};
+
+let model = null;
+const statusPill = document.getElementById('status-pill');
+const stageError = document.getElementById('stage-error');
+const errorDetalle = document.getElementById('error-detalle');
+const diagnosticarBtn = document.getElementById('diagnosticar-btn');
+
+function setEstado(texto, tipo) {
+  statusPill.textContent = texto;
+  statusPill.className = 'status-pill' + (tipo === 'ok' ? ' ok' : tipo === 'error' ? ' error' : '');
+}
+
+async function cargarModelo() {
+  stageError.style.display = 'none';
+  setEstado('descargando', 'loading');
+  diagnosticarBtn.disabled = true;
+  diagnosticarBtn.textContent = 'Cargando modelo…';
+  try {
+    model = await tf.loadLayersModel(MODEL_URL);
+    const dummy = tf.zeros([1, IMG_SIZE, IMG_SIZE, 3]);
+    const out = model.predict(dummy);
+    await out.data();
+    dummy.dispose();
+    out.dispose();
+    setEstado('listo', 'ok');
+    diagnosticarBtn.disabled = false;
+    diagnosticarBtn.textContent = 'Diagnosticar';
+  } catch (err) {
+    setEstado('error', 'error');
+    stageError.style.display = 'block';
+    errorDetalle.textContent = err && err.message ? err.message : 'Error desconocido al cargar el modelo.';
+    diagnosticarBtn.textContent = 'Modelo no disponible';
+  }
+}
+cargarModelo();
+document.getElementById('retry-btn').addEventListener('click', cargarModelo);
+
+const uploadZone = document.getElementById('upload-zone');
+const fileInput = document.getElementById('file-input');
+const stageUpload = document.getElementById('stage-upload');
+const stagePreview = document.getElementById('stage-preview');
+const previewImg = document.getElementById('preview-img');
+const cambiarBtn = document.getElementById('cambiar-btn');
+const stageLoading = document.getElementById('stage-loading');
+const stageResult = document.getElementById('stage-result');
+
+function mostrarEtapa(etapa) {
+  stageUpload.style.display = etapa === 'upload' ? 'block' : 'none';
+  stagePreview.style.display = etapa === 'preview' ? 'block' : 'none';
+  stageLoading.style.display = etapa === 'loading' ? 'block' : 'none';
+  stageResult.style.display = etapa === 'result' ? 'block' : 'none';
+}
+
+function manejarArchivo(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => { previewImg.src = ev.target.result; mostrarEtapa('preview'); };
+  reader.readAsDataURL(file);
+}
+
+uploadZone.addEventListener('click', () => fileInput.click());
+uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.style.borderColor = 'var(--forest)'; });
+uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = 'var(--sage)'; });
+uploadZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadZone.style.borderColor = 'var(--sage)';
+  manejarArchivo(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', (e) => manejarArchivo(e.target.files[0]));
+cambiarBtn.addEventListener('click', () => { fileInput.value = ''; mostrarEtapa('upload'); });
+
+let ultimoTensorEntrada = null;
+let ultimoClaseIdx = null;
+
+function valorAColor(v) {
+  const stops = [[6,26,50],[9,64,105],[15,110,86],[186,199,89],[239,159,39],[168,69,43]];
+  const scaled = v * (stops.length - 1);
+  const i = Math.min(Math.floor(scaled), stops.length - 2);
+  const t = scaled - i;
+  const a = stops[i], b = stops[i+1];
+  return [Math.round(a[0]+(b[0]-a[0])*t), Math.round(a[1]+(b[1]-a[1])*t), Math.round(a[2]+(b[2]-a[2])*t)];
+}
+
+async function dibujarMapaAtencion(canvasEl, imgEl, gradData) {
+  const ctx = canvasEl.getContext('2d');
+  canvasEl.width = IMG_SIZE;
+  canvasEl.height = IMG_SIZE;
+  ctx.drawImage(imgEl, 0, 0, IMG_SIZE, IMG_SIZE);
+  const base = ctx.getImageData(0, 0, IMG_SIZE, IMG_SIZE);
+  for (let i = 0; i < IMG_SIZE * IMG_SIZE; i++) {
+    const v = gradData[i];
+    const [r, g, b] = valorAColor(v);
+    const alpha = 0.45;
+    base.data[i*4] = base.data[i*4]*(1-alpha) + r*alpha;
+    base.data[i*4+1] = base.data[i*4+1]*(1-alpha) + g*alpha;
+    base.data[i*4+2] = base.data[i*4+2]*(1-alpha) + b*alpha;
+  }
+  ctx.putImageData(base, 0, 0);
+}
+
+diagnosticarBtn.addEventListener('click', async () => {
+  if (!model) return;
+  mostrarEtapa('loading');
+  try {
+    const resultado = tf.tidy(() => {
+      let img = tf.browser.fromPixels(previewImg).resizeBilinear([IMG_SIZE, IMG_SIZE]).toFloat();
+      return img.div(127.5).sub(1).expandDims(0);
+    });
+    const preds = model.predict(resultado);
+    const data = await preds.data();
+    const resultados = Array.from(data).map((prob, i) => ({ clase: CLASES[i], prob }));
+    resultados.sort((a, b) => b.prob - a.prob);
+    const top = resultados[0];
+
+    if (ultimoTensorEntrada) ultimoTensorEntrada.dispose();
+    ultimoTensorEntrada = resultado;
+    ultimoClaseIdx = CLASES.indexOf(top.clase);
+    preds.dispose();
+
+    const ficha = FICHAS[top.clase];
+    const tono = TONOS[ficha.tono];
+    const confianza = Math.round(top.prob * 100);
+
+    stageResult.innerHTML = `
+      <div class="spec-header">
+        <div class="spec-name-row">
+          <i class="${ficha.icono}" style="font-size: 20px; color: ${tono.color};" aria-hidden="true"></i>
+          <p class="spec-name">${ficha.nombre}</p>
+        </div>
+        <div class="gauge-outer" style="background: conic-gradient(${tono.color} ${confianza * 3.6}deg, var(--sage-line) 0deg);">
+          <div class="gauge-inner">
+            <span class="gauge-value" style="color: ${tono.color};">${confianza}%</span>
+            <span class="gauge-label">confianza</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="plates">
+        <div>
+          <p class="plate-caption">Fig. 1 — foto original</p>
+          <img src="${previewImg.src}" class="plate-img" />
+        </div>
+        <div id="plate-mapa">
+          <p class="plate-caption">Fig. 2 — mapa de atención</p>
+          <button id="ver-mapa-btn" style="width: 100%; height: 100%; aspect-ratio: 1; font-size: 12px;">Calcular</button>
+        </div>
+      </div>
+
+      <p class="field-label">Síntomas</p>
+      <p class="field-text">${ficha.sintomas}</p>
+      <p class="field-label">Manejo recomendado</p>
+      <p class="field-text">${ficha.manejo}</p>
+      <p class="field-label">Cuándo consultar a un agrónomo</p>
+      <p class="field-text" style="margin-bottom: 4px;">${ficha.derivar}</p>
+
+      <hr class="divider" />
+      <button id="otra-foto-btn" style="width: 100%;"><i class="ti ti-arrow-left" style="font-size: 15px; vertical-align: -2px; margin-right: 5px;" aria-hidden="true"></i>Analizar otra foto</button>
+    `;
+
+    document.getElementById('ver-mapa-btn').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      btn.textContent = '…';
+      const gradFn = tf.grad((x) => model.apply(x, { training: false }).gather([ultimoClaseIdx], 1).sum());
+      const grads = gradFn(ultimoTensorEntrada);
+      const saliency = tf.tidy(() => {
+        const mag = grads.abs().max(-1).squeeze();
+        const minV = mag.min();
+        const range = mag.max().sub(minV).add(1e-6);
+        return mag.sub(minV).div(range);
+      });
+      const gradData = await saliency.data();
+      grads.dispose();
+      saliency.dispose();
+
+      const canvasOverlay = document.createElement('canvas');
+      await dibujarMapaAtencion(canvasOverlay, previewImg, gradData);
+      canvasOverlay.className = 'plate-img';
+      canvasOverlay.style.width = '100%';
+      canvasOverlay.style.height = 'auto';
+
+      const slot = document.getElementById('plate-mapa');
+      slot.innerHTML = '<p class="plate-caption">Fig. 2 — mapa de atención</p>';
+      slot.appendChild(canvasOverlay);
+    });
+
+    document.getElementById('otra-foto-btn').addEventListener('click', () => { fileInput.value = ''; mostrarEtapa('upload'); });
+    mostrarEtapa('result');
+  } catch (err) {
+    mostrarEtapa('preview');
+    alert('No se pudo procesar la imagen: ' + (err && err.message ? err.message : 'error desconocido'));
+  }
+});
+</script>
+</body>
+</html>
