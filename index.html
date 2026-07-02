@@ -256,7 +256,14 @@ async function cargarModelo() {
   } catch (err) {
     setEstado('error', 'error');
     stageError.style.display = 'block';
-    errorDetalle.textContent = err && err.message ? err.message : 'Error desconocido al cargar el modelo.';
+    let detalle = 'Error desconocido al cargar el modelo.';
+    try {
+      if (err) {
+        detalle = err.message || err.toString() || JSON.stringify(err);
+      }
+    } catch (e) { /* keep default */ }
+    errorDetalle.textContent = detalle;
+    console.error('Error completo al cargar el modelo:', err);
     diagnosticarBtn.textContent = 'Modelo no disponible';
   }
 }
