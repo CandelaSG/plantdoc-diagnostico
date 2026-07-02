@@ -193,7 +193,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
 <script>
-const MODEL_URL = "https://raw.githubusercontent.com/CandelaSG/plantdoc-diagnostico/main/model.json";
+const MODEL_URL_BASE = "https://raw.githubusercontent.com/CandelaSG/plantdoc-diagnostico/main/model.json";
 const IMG_SIZE = 128;
 
 const CLASES = [
@@ -243,6 +243,7 @@ async function cargarModelo() {
   diagnosticarBtn.disabled = true;
   diagnosticarBtn.textContent = 'Cargando modelo…';
   try {
+    const MODEL_URL = MODEL_URL_BASE + '?cachebust=' + Date.now();
     model = await tf.loadLayersModel(MODEL_URL);
     const dummy = tf.zeros([1, IMG_SIZE, IMG_SIZE, 3]);
     const out = model.predict(dummy);
